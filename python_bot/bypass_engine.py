@@ -539,9 +539,25 @@ class UniversalBypassEngine:
         # Re-evaluate final destination
         parsed_dest = urllib.parse.urlparse(final_dest)
         dest_domain = parsed_dest.hostname.lower() if parsed_dest.hostname else ""
+        
+        # Check if the final destination is a known intermediate blog / ad lander (e.g. aajkafreshnews, runner=, themezon, etc.)
+        is_intermediate_blog = any(b in dest_domain for b in ['news.', 'blog.', 'tech.', 'job.', 'themezon', 'gyanipandit', 'techmody']) and ('runner=' in final_dest or 'token=' in final_dest or '/usa-' in final_dest or '/tech-' in final_dest)
         is_same_shortener = (dest_domain == initial_domain) and (initial_domain in self.known_domains or "link" in initial_domain)
 
-        if final_dest == url or is_same_shortener:
+        if final_dest == url or is_same_shortener or is_intermediate_blog:
+            # Attempt upstream bypass solver fallback
+            if self.session:
+                upstream_res = query_upstream_bypass_apis(url, self.session)
+                if upstream_res and upstream_res != url:
+                    parsed_up = urllib.parse.urlparse(upstream_res)
+                    if parsed_up.hostname != initial_domain and not any(b in parsed_up.hostname for b in ['news.', 'blog.', 'tech.', 'job.']):
+                        final_dest = upstream_res
+                        method_used = "✨ Upstream High-Speed Bypass Network"
+                        hops.append({"url": final_dest, "type": "upstream_api"})
+                        is_intermediate_blog = False
+                        is_same_shortener = False
+
+        if final_dest == url or is_same_shortener or is_intermediate_blog:
             return {
                 "success": False,
                 "original_url": url,
