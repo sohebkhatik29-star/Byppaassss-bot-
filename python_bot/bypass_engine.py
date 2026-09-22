@@ -53,27 +53,37 @@ from specialized_decoders import (
 
 class UniversalBypassEngine:
     def __init__(self):
+        from config import PROXY_URL, DEFAULT_USER_AGENT
         self.default_headers = {
-            "User-Agent": (
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-                "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
-            ),
+            "User-Agent": DEFAULT_USER_AGENT,
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
-            "Accept-Language": "en-US,en;q=0.9,hi;q=0.8",
-            "Sec-Ch-Ua": '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
-            "Sec-Ch-Ua-Mobile": "?0",
-            "Sec-Ch-Ua-Platform": '"Windows"',
+            "Accept-Language": "en-IN,en-US;q=0.9,hi;q=0.8",
+            "Sec-Ch-Ua": '"Android";v="14.0.0", "Chromium";v="131", "Not_A Brand";v="24"',
+            "Sec-Ch-Ua-Mobile": "?1",
+            "Sec-Ch-Ua-Platform": '"Android"',
             "Upgrade-Insecure-Requests": "1",
+            "X-Forwarded-For": "103.211.52.12",
+            "CF-Connecting-IP": "103.211.52.12",
         }
+        proxies = {"http": PROXY_URL, "https": PROXY_URL} if PROXY_URL else None
         if HAS_CLOUDSCRAPER:
             try:
                 self.session = cloudscraper.create_scraper(
-                    browser={'browser': 'chrome', 'platform': 'windows', 'mobile': False}
+                    browser={'browser': 'chrome', 'platform': 'android', 'mobile': True}
                 )
+                if proxies:
+                    self.session.proxies.update(proxies)
+                self.session.headers.update(self.default_headers)
             except Exception:
                 self.session = requests.Session() if HAS_REQUESTS else None
+                if self.session:
+                    if proxies:
+                        self.session.proxies.update(proxies)
+                    self.session.headers.update(self.default_headers)
         elif HAS_REQUESTS:
             self.session = requests.Session()
+            if proxies:
+                self.session.proxies.update(proxies)
             self.session.headers.update(self.default_headers)
         else:
             self.session = None

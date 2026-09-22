@@ -111,20 +111,31 @@ def decode_adlinkfly(url: str, html: str, session: Any = None) -> Optional[str]:
         if csrf_token:
             post_headers["X-CSRF-Token"] = csrf_token
 
+        # Add domain variants if it's vplink or gplink
+        extra_domains = []
+        if "vplink" in parsed.netloc:
+            extra_domains = ["https://vplink.in", "https://vplinks.in", "https://vplink.co"]
+        elif "gplink" in parsed.netloc:
+            extra_domains = ["https://gplinks.co", "https://gplinks.in"]
+
+        for d in extra_domains:
+            post_endpoints.append(f"{d}/links/go")
+
         for endpoint in post_endpoints:
-            try:
-                resp = session.post(endpoint, data=post_data, headers=post_headers, timeout=8)
-                if resp.status_code == 200:
-                    try:
-                        res_json = resp.json()
-                        if isinstance(res_json, dict):
-                            for key in ["url", "dest", "destination", "link", "target"]:
-                                if key in res_json and isinstance(res_json[key], str) and res_json[key].startswith(('http://', 'https://')):
-                                    return res_json[key]
-                    except Exception:
-                        pass
-            except Exception:
-                continue
+            for payload in [post_data, {"alias": alias} if alias else post_data]:
+                try:
+                    resp = session.post(endpoint, data=payload, headers=post_headers, timeout=8)
+                    if resp.status_code == 200:
+                        try:
+                            res_json = resp.json()
+                            if isinstance(res_json, dict):
+                                for key in ["url", "dest", "destination", "link", "target"]:
+                                    if key in res_json and isinstance(res_json[key], str) and res_json[key].startswith(('http://', 'https://')):
+                                        return res_json[key]
+                        except Exception:
+                            pass
+                except Exception:
+                    continue
     except Exception:
         pass
     return None
