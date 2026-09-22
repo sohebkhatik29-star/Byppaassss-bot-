@@ -252,9 +252,15 @@ if __name__ == "__main__":
     print("✨ Autonomous Zero-Day link resolution engine is ONLINE!")
     print("👉 Send any shortlink in Telegram to bypass...")
     try:
-        # Delete any active webhook to prevent Telegram 409 Conflict error
-        bot.remove_webhook()
-        time.sleep(1)
+        # Delete any active webhook or previous session to prevent Telegram 409 Conflict error
+        bot.remove_webhook(drop_pending_updates=True)
+        time.sleep(2)
     except Exception as e:
         print(f"Webhook reset note: {e}")
-    bot.infinity_polling(skip_pending=True)
+    
+    while True:
+        try:
+            bot.infinity_polling(skip_pending=True, timeout=20, long_polling_timeout=20)
+        except Exception as err:
+            print(f"Polling conflict or reconnect: {err}. Retrying in 3 seconds...")
+            time.sleep(3)
