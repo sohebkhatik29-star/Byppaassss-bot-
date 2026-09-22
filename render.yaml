@@ -1,0 +1,15 @@
+services:
+  # 100% FREE Tier Web Service (Runs both Telegram Bot + API 24/7 without credit card)
+  - type: web
+    name: universal-auto-bypass-bot
+    env: python
+    region: oregon
+    plan: free
+    rootDir: python_bot
+    buildCommand: pip install -r requirements.txt
+    startCommand: python main.py
+    envVars:
+      - key: BOT_TOKEN
+        sync: false # Set your Telegram Bot Token from @BotFather in Render Dashboard
+      - key: PYTHON_VERSION
+        value: 3.11.0

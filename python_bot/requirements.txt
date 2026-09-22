@@ -1,0 +1,9 @@
+telebot>=0.0.5
+pyTelegramBotAPI>=4.26.0
+requests>=2.32.3
+beautifulsoup4>=4.13.3
+urllib3>=2.3.0
+cloudscraper>=1.2.71
+fastapi>=0.115.0
+uvicorn>=0.34.0
+pydantic>=2.10.0
